@@ -3,8 +3,9 @@ package cmd
 import (
 	"errors"
 	"github.com/spf13/cobra"
-	"io/ioutil"
+	"io"
 	"os"
+	"packer/lib"
 	"path/filepath"
 	"strings"
 )
@@ -31,15 +32,16 @@ func pack(cmd *cobra.Command, args []string) {
 	if err != nil {
 		handleErr(err)
 	}
+	defer r.Close()
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		handleErr(err)
 	}
 
-	packed := "" + string(data) // TO REMOVE
+	packed := lib.Encode(string(data))
 
-	err = ioutil.WriteFile(packedFileName(filePath), []byte(packed), 0644)
+	err = os.WriteFile(packedFileName(filePath), []byte(packed), 0644)
 }
 
 func packedFileName(path string) string {
