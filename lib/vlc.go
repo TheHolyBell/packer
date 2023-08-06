@@ -1,23 +1,10 @@
 package lib
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 )
-
-type encodingTable map[rune]string
-
-type BinaryChunks []BinaryChunk
-
-type BinaryChunk string
-
-type HexChunk string
-type HexChunks []HexChunk
-
-const chunkSize = 8
 
 func Encode(str string) string {
 	str = prepareText(str)
@@ -27,84 +14,12 @@ func Encode(str string) string {
 	return chunks.ToHex().ToString()
 }
 
-func (bcs BinaryChunks) ToHex() HexChunks {
-	res := make(HexChunks, 0, len(bcs))
+func Decode(encodedText string) string {
+	hChunks := NewHexChunks(encodedText)
 
-	for _, chunk := range bcs {
-		hexChunk := chunk.ToHex()
+	dTree := getEncodingTable().DecodingTree()
 
-		res = append(res, hexChunk)
-	}
-
-	return res
-}
-
-func (hcs HexChunks) ToString() string {
-	const sep = " "
-
-	switch len(hcs) {
-	case 0:
-		return ""
-	case 1:
-		return string(hcs[0])
-	}
-
-	var buf strings.Builder
-
-	buf.WriteString(string(hcs[0]))
-
-	for _, hc := range hcs[1:] {
-		buf.WriteString(sep)
-		buf.WriteString(string(hc))
-	}
-
-	return buf.String()
-}
-
-func (bc BinaryChunk) ToHex() HexChunk {
-	num, err := strconv.ParseUint(string(bc), 2, chunkSize)
-	if err != nil {
-		panic("can't parse binary chunk: " + err.Error())
-	}
-
-	res := strings.ToUpper(fmt.Sprintf("%x", num))
-
-	if len(res) == 1 {
-		res = "0" + res
-	}
-
-	return HexChunk(res)
-}
-
-func splitByChunks(bStr string, chunkSize int) BinaryChunks {
-	strLen := utf8.RuneCountInString(bStr)
-	chunksCount := strLen / chunkSize
-
-	if strLen/chunkSize != 0 {
-		chunksCount++
-	}
-
-	res := make(BinaryChunks, 0, chunksCount)
-
-	var buf strings.Builder
-
-	for i, ch := range bStr {
-		buf.WriteString(string(ch))
-
-		if (i+1)%chunkSize == 0 {
-			res = append(res, BinaryChunk(buf.String()))
-			buf.Reset()
-		}
-	}
-
-	if buf.Len() != 0 {
-		lastChunk := buf.String()
-
-		lastChunk += strings.Repeat("0", chunkSize-len(lastChunk))
-		res = append(res, BinaryChunk(lastChunk))
-	}
-
-	return res
+	return exportText(dTree.Decode(hChunks.ToBinary().Join()))
 }
 
 func encodeBin(str string) string {
@@ -171,6 +86,21 @@ func prepareText(str string) string {
 			buf.WriteRune(unicode.ToLower(ch))
 		} else {
 			buf.WriteRune(ch)
+		}
+	}
+
+	return buf.String()
+}
+
+func exportText(str string) string {
+	var buf strings.Builder
+
+	for i := 0; i < len(str); i++ {
+		if str[i] == '!' {
+			buf.WriteRune(unicode.ToUpper(rune(str[i+1])))
+			i++
+		} else {
+			buf.WriteRune(rune(str[i]))
 		}
 	}
 

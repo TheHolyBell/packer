@@ -10,18 +10,17 @@ import (
 	"strings"
 )
 
-var vlcCmd = &cobra.Command{
+var vlcUnpackCmd = &cobra.Command{
 	Use:   "vlc",
-	Short: "Pack file using variable-length code",
-	Run:   pack,
+	Short: "Unpack file using variable-length code",
+	Run:   unpack,
 }
 
 const (
-	packedExtension  = "vlc"
-	pathNotSpecified = "path to file is not specified"
+	unpackedExtension = "txt"
 )
 
-func pack(cmd *cobra.Command, args []string) {
+func unpack(cmd *cobra.Command, args []string) {
 	if len(args) == 0 || args[0] == "" {
 		handleErr(errors.New(pathNotSpecified))
 	}
@@ -39,12 +38,15 @@ func pack(cmd *cobra.Command, args []string) {
 		handleErr(err)
 	}
 
-	packed := lib.Encode(string(data))
+	unpacked := lib.Decode(string(data))
 
-	err = os.WriteFile(packedFileName(filePath), []byte(packed), 0644)
+	err = os.WriteFile(unpackedFileName(filePath), []byte(unpacked), 0644)
+	if err != nil {
+		handleErr(err)
+	}
 }
 
-func packedFileName(path string) string {
+func unpackedFileName(path string) string {
 	fileName := filepath.Base(path)
 	ext := filepath.Ext(fileName)
 	baseName := strings.TrimSuffix(fileName, ext)
@@ -52,5 +54,5 @@ func packedFileName(path string) string {
 }
 
 func init() {
-	packCmd.AddCommand(vlcCmd)
+	unpackCmd.AddCommand(vlcUnpackCmd)
 }
