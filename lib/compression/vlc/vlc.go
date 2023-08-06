@@ -1,4 +1,4 @@
-package lib
+package vlc
 
 import (
 	"strconv"
@@ -6,7 +6,14 @@ import (
 	"unicode"
 )
 
-func Encode(str string) []byte {
+type EncoderDecoder struct {
+}
+
+func New() EncoderDecoder {
+	return EncoderDecoder{}
+}
+
+func (ed EncoderDecoder) Encode(str string) []byte {
 	str = prepareText(str)
 
 	chunks := splitByChunks(encodeBin(str), chunkSize)
@@ -14,7 +21,7 @@ func Encode(str string) []byte {
 	return chunks.Bytes()
 }
 
-func Decode(encodedData []byte) string {
+func (ed EncoderDecoder) Decode(encodedData []byte) string {
 	bString := NewBinChunks(encodedData).Join()
 
 	dTree := getEncodingTable().DecodingTree()

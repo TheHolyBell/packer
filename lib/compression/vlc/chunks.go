@@ -1,4 +1,4 @@
-package lib
+package vlc
 
 import (
 	"fmt"
