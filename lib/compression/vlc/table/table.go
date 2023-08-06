@@ -1,24 +1,36 @@
-package vlc
+package table
 
 import "strings"
 
-type DecodingTree struct {
-	Value string
-	Zero  *DecodingTree
-	One   *DecodingTree
+type Generator interface {
+	NewTable(text string) EncodingTable
 }
 
-func (et encodingTable) DecodingTree() DecodingTree {
-	res := DecodingTree{}
+type EncodingTable map[rune]string
+
+type decodingTree struct {
+	Value string
+	Zero  *decodingTree
+	One   *decodingTree
+}
+
+func (et EncodingTable) Decode(str string) string {
+	dt := et.decodingTree()
+
+	return dt.Decode(str)
+}
+
+func (et EncodingTable) decodingTree() decodingTree {
+	res := decodingTree{}
 
 	for ch, code := range et {
-		res.Add(code, ch)
+		res.add(code, ch)
 	}
 
 	return res
 }
 
-func (dt *DecodingTree) Decode(str string) string {
+func (dt *decodingTree) Decode(str string) string {
 	var buf strings.Builder
 
 	currNode := dt
@@ -47,20 +59,20 @@ func (dt *DecodingTree) Decode(str string) string {
 	return buf.String()
 }
 
-func (dt *DecodingTree) Add(code string, value rune) {
+func (dt *decodingTree) add(code string, value rune) {
 	currentNode := dt
 
 	for _, ch := range code {
 		switch ch {
 		case '0':
 			if currentNode.Zero == nil {
-				currentNode.Zero = &DecodingTree{}
+				currentNode.Zero = &decodingTree{}
 			}
 			currentNode = currentNode.Zero
 			break
 		case '1':
 			if currentNode.One == nil {
-				currentNode.One = &DecodingTree{}
+				currentNode.One = &decodingTree{}
 			}
 			currentNode = currentNode.One
 			break

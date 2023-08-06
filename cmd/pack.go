@@ -7,8 +7,8 @@ import (
 	"os"
 	"packer/lib/compression"
 	"packer/lib/compression/vlc"
+	"packer/lib/compression/vlc/table/shannon_fano"
 	"path/filepath"
-	"strings"
 )
 
 var packCmd = &cobra.Command{
@@ -18,7 +18,7 @@ var packCmd = &cobra.Command{
 }
 
 const (
-	packedExtension  = "vlc"
+	packedExtension  = "shannon"
 	pathNotSpecified = "path to file is not specified"
 )
 
@@ -32,8 +32,8 @@ func pack(cmd *cobra.Command, args []string) {
 	var encoder compression.Encoder
 
 	switch method {
-	case "vlc":
-		encoder = vlc.New()
+	case "shannon":
+		encoder = vlc.New(shannon_fano.NewGenerator())
 	default:
 		panic("no such encoder: " + method)
 	}
@@ -44,6 +44,7 @@ func pack(cmd *cobra.Command, args []string) {
 	if err != nil {
 		handleErr(err)
 	}
+	defer os.Remove(filePath) // remove old file
 	defer r.Close()
 
 	data, err := io.ReadAll(r)
@@ -57,13 +58,12 @@ func pack(cmd *cobra.Command, args []string) {
 	if err != nil {
 		handleErr(err)
 	}
+
 }
 
 func packedFileName(path string) string {
 	fileName := filepath.Base(path)
-	ext := filepath.Ext(fileName)
-	baseName := strings.TrimSuffix(fileName, ext)
-	return baseName + "." + packedExtension
+	return fileName + "." + packedExtension
 }
 
 func init() {

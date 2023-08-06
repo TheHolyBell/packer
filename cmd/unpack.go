@@ -7,6 +7,7 @@ import (
 	"os"
 	"packer/lib/compression"
 	"packer/lib/compression/vlc"
+	"packer/lib/compression/vlc/table/shannon_fano"
 	"path/filepath"
 	"strings"
 )
@@ -16,10 +17,6 @@ var unpackCmd = &cobra.Command{
 	Short: "Unpack file",
 	Run:   unpack,
 }
-
-const (
-	unpackedExtension = "txt"
-)
 
 func unpack(cmd *cobra.Command, args []string) {
 	var decoder compression.Decoder
@@ -31,8 +28,8 @@ func unpack(cmd *cobra.Command, args []string) {
 	method := cmd.Flag("method").Value.String()
 
 	switch method {
-	case "vlc":
-		decoder = vlc.New()
+	case "shannon":
+		decoder = vlc.New(shannon_fano.NewGenerator())
 	default:
 		panic("no such dencoder: " + method)
 	}
@@ -43,6 +40,7 @@ func unpack(cmd *cobra.Command, args []string) {
 	if err != nil {
 		handleErr(err)
 	}
+	defer os.Remove(filePath) // remove old file
 	defer r.Close()
 
 	data, err := io.ReadAll(r)
@@ -62,7 +60,7 @@ func unpackedFileName(path string) string {
 	fileName := filepath.Base(path)
 	ext := filepath.Ext(fileName)
 	baseName := strings.TrimSuffix(fileName, ext)
-	return baseName + "." + unpackedExtension
+	return baseName
 }
 
 func init() {
