@@ -41,7 +41,7 @@ func pack(cmd *cobra.Command, args []string) {
 
 	packed := lib.Encode(string(data))
 
-	err = os.WriteFile(packedFileName(filePath), []byte(packed), 0644)
+	err = os.WriteFile(packedFileName(filePath), packed, 0644)
 	if err != nil {
 		handleErr(err)
 	}

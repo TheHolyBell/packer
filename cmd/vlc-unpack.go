@@ -38,7 +38,7 @@ func unpack(cmd *cobra.Command, args []string) {
 		handleErr(err)
 	}
 
-	unpacked := lib.Decode(string(data))
+	unpacked := lib.Decode(data)
 
 	err = os.WriteFile(unpackedFileName(filePath), []byte(unpacked), 0644)
 	if err != nil {
